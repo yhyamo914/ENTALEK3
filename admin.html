@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - مركز إنتالك</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .admin-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .admin-actions button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .admin-actions button.delete {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        
+        .sync-status {
+            background: #e8f4fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-right: 4px solid #3498db;
+        }
+        
+        .form-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+        
+        .grades-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .students-table th, .students-table td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .students-table th {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .students-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 2px;
+            font-size: 12px;
+        }
+        
+        .edit-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>لوحة تحكم مركز إنتالك - النسخة الأوتوماتيكية</h1>
+            <p>💾 الحفظ التلقائي على Google Sheets</p>
+        </div>
+        
+        <div class="admin-panel">
+            <!-- حالة المزامنة -->
+            <div class="sync-status">
+                <strong>🔄 النظام الأوتوماتيكي نشط</strong>
+                <p>جميع التعديلات تحفظ تلقائياً على Google Sheets</p>
+                <button onclick="testConnection()" style="margin-top: 10px; padding: 8px 15px;">🔍 اختبار الاتصال</button>
+            </div>
+            
+            <div class="admin-actions">
+                <button onclick="showAddForm()">➕ إضافة طالب جديد</button>
+                <button onclick="loadFromGoogleSheets()">🔄 تحديث البيانات</button>
+                <button onclick="exportBackup()">💾 نسخة احتياطية</button>
+                <button onclick="showSetupGuide()">🛠️ إعداد النظام</button>
+            </div>
+            
+            <div id="statusMessage" class="status-message"></div>
+            
+            <!-- نموذج الإعداد -->
+            <div class="form-section" id="setupForm">
+                <h3>🛠️ إعداد الاتصال بـ Google Sheets</h3>
+                <div class="form-group">
+                    <label for="apiUrl">رابط API:</label>
+                    <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/XXXX/exec">
+                </div>
+                <div class="admin-actions">
+                    <button onclick="saveApiUrl()">💾 حفظ الإعدادات</button>
+                    <button onclick="hideSetupForm()">❌ إلغاء</button>
+                </div>
+            </div>
+            
+            <!-- نموذج إضافة/تعديل طالب -->
+            <div class="form-section" id="studentForm">
+                <h3 id="formTitle">إضافة طالب جديد</h3>
+                <div class="form-group">
+                    <label for="formStudentId">رقم الطالب:</label>
+                    <input type="number" id="formStudentId">
+                </div>
+                <div class="form-group">
+                    <label for="formStudentName">اسم الطالب:</label>
+                    <input type="text" id="formStudentName">
+                </div>
+                <div class="form-group">
+                    <label>الدرجات:</label>
+                    <div id="gradesInputs"></div>
+                    <button onclick="addGradeField()" style="margin-top: 10px; padding: 8px 15px;">+ إضافة مادة</button>
+                </div>
+                <div class="admin-actions">
+                    <button onclick="saveStudent()">💾 حفظ الطالب</button>
+                    <button onclick="hideForm()">❌ إلغاء</button>
+                    <button onclick="deleteStudent()" class="delete" id="deleteBtn" style="display: none;">🗑️ حذف الطالب</button>
+                </div>
+            </div>
+            
+            <!-- قائمة الطلاب -->
+            <div id="loadingMessage" class="loading">جاري تحميل البيانات من Google Sheets...</div>
+            
+            <h3>قائمة الطلاب المسجلين</h3>
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>رقم الطالب</th>
+                        <th>الاسم</th>
+                        <th>عدد المواد</th>
+                        <th>المجموع</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsList">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="back-link" style="text-align: center; margin-top: 20px;">
+            <a href="index.html" style="color: #3498db; text-decoration: none; font-weight: bold;">← العودة لصفحة الاستعلام</a>
+        </div>
+    </div>
+
+    <script>
+        // بيانات الطلاب
+        let studentsData = [];
+        let currentEditId = null;
+        
+        // رابط API الافتراضي
+        const API_URL = localStorage.getItem('googleSheetsApiUrl') || 'https://script.google.com/macros/s/AKfycbwpoYoA_l6jPlu83CcsWryet4Bp5p_0HgXpahsbi2kBUikHdKU64YE2HCa25fTjbsAX/exec';
+
+        // تحميل البيانات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('apiUrl').value = API_URL;
+            
+            if (API_URL.includes('YOUR_SCRIPT_ID')) {
+                showSetupGuide();
+            } else {
+                loadFromGoogleSheets();
+            }
+        });
+
+        // دالة تحميل البيانات من Google Sheets
+        async function loadFromGoogleSheets() {
+            showLoading(true);
+            
+            try {
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error('فشل في الاتصال بالخادم');
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                studentsData = data.students || data;
+                refreshStudentsList();
+                showStatus('تم تحميل البيانات بنجاح من Google Sheets', 'success');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('فشل في تحميل البيانات: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // دالة حفظ الطالب على Google Sheets
+        async function saveStudentToSheets() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(studentsData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                return true;
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                throw error;
+            }
+        }
+
+        // دالة اختبار الاتصال
+        async function testConnection() {
+            try {
+                showStatus('جاري اختبار الاتصال...', 'success');
+                
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                showStatus('✅ الاتصال بنجاح! النظام يعمل بشكل صحيح', 'success');
+                
+            } catch (error) {
+                showStatus('❌ فشل الاتصال: ' + error.message, 'error');
+            }
+        }
+
+        // دالة حفظ الإعدادات
+        function saveApiUrl() {
+            const url = document.getElementById('apiUrl').value.trim();
+            
+            if (!url) {
+                showStatus('يرجى إدخال رابط API', 'error');
+                return;
+            }
+            
+            localStorage.setItem('googleSheetsApiUrl', url);
+            showStatus('تم حفظ الإعدادات بنجاح', 'success');
+            hideSetupForm();
+            
+            // إعادة تحميل البيانات
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        // دالة إظهار دليل الإعداد
+        function showSetupGuide() {
+            document.getElementById('setupForm').style.display = 'block';
+            showStatus('يرجى إعداد رابط API الخاص بـ Google Sheets', 'error');
+        }
+
+        // دالة إخفاء نموذج الإعداد
+        function hideSetupForm() {
+            document.getElementById('setupForm').style.display = 'none';
+        }
+
+        // باقي الدوال (نفس السابق مع تعديلات بسيطة)
+        function showAddForm(student = null) {
+            const form = document.getElementById('studentForm');
+            const formTitle = document.getElementById('formTitle');
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            if (student) {
+                formTitle.textContent = 'تعديل بيانات الطالب';
+                document.getElementById('formStudentId').value = student.id;
+                document.getElementById('formStudentName').value = student.name;
+                currentEditId = student.id;
+                deleteBtn.style.display = 'block';
+                
+                const gradesInputs = document.getElementById('gradesInputs');
+                gradesInputs.innerHTML = '';
+                for (const [subject, grade] of Object.entries(student.grades)) {
+                    addGradeField(subject, grade);
+                }
+            } else {
+                formTitle.textContent = 'إضافة طالب جديد';
+                document.getElementById('formStudentId').value = '';
+                document.getElementById('formStudentName').value = '';
+                currentEditId = null;
+                deleteBtn.style.display = 'none';
+                
+                const gradesInputs = document.getElementById('gradesInputs');
+                gradesInputs.innerHTML = '';
+                addGradeField();
+            }
+            
+            form.style.display = 'block';
+        }
+
+        function hideForm() {
+            document.getElementById('studentForm').style.display = 'none';
+        }
+
+        function addGradeField(subject = '', grade = '') {
+            const gradesInputs = document.getElementById('gradesInputs');
+            const gradeField = document.createElement('div');
+            gradeField.className = 'grades-inputs';
+            gradeField.innerHTML = `
+                <input type="text" placeholder="اسم المادة" value="${subject}" class="grade-subject">
+                <input type="number" placeholder="الدرجة" value="${grade}" class="grade-value" min="0" max="100">
+                <button type="button" onclick="this.parentElement.remove()" class="delete-btn">✕</button>
+            `;
+            gradesInputs.appendChild(gradeField);
+        }
+
+        async function saveStudent() {
+            const id = parseInt(document.getElementById('formStudentId').value);
+            const name = document.getElementById('formStudentName').value.trim();
+            
+            if (!id || !name) {
+                showStatus('يرجى ملء جميع الحقول المطلوبة', 'error');
+                return;
+            }
+            
+            const grades = {};
+            const subjectInputs = document.querySelectorAll('.grade-subject');
+            const gradeInputs = document.querySelectorAll('.grade-value');
+            
+            for (let i = 0; i < subjectInputs.length; i++) {
+                const subject = subjectInputs[i].value.trim();
+                const grade = parseInt(gradeInputs[i].value);
+                
+                if (subject && !isNaN(grade)) {
+                    grades[subject] = grade;
+                }
+            }
+            
+            if (Object.keys(grades).length === 0) {
+                showStatus('يرجى إضافة درجة واحدة على الأقل', 'error');
+                return;
+            }
+            
+            try {
+                if (currentEditId) {
+                    const index = studentsData.findIndex(s => s.id === currentEditId);
+                    if (index !== -1) {
+                        studentsData[index] = { id, name, grades };
+                    }
+                } else {
+                    if (studentsData.find(s => s.id === id)) {
+                        showStatus('رقم الطالب مسجل مسبقاً', 'error');
+                        return;
+                    }
+                    studentsData.push({ id, name, grades });
+                }
+                
+                // حفظ تلقائي على Google Sheets
+                await saveStudentToSheets();
+                
+                showStatus('تم حفظ الطالب بنجاح على Google Sheets', 'success');
+                refreshStudentsList();
+                hideForm();
+                
+            } catch (error) {
+                showStatus('فشل في الحفظ: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteStudent() {
+            if (!currentEditId) return;
+            
+            if (confirm('هل أنت متأكد من حذف هذا الطالب؟')) {
+                try {
+                    studentsData = studentsData.filter(s => s.id !== currentEditId);
+                    await saveStudentToSheets();
+                    showStatus('تم حذف الطالب بنجاح', 'success');
+                    refreshStudentsList();
+                    hideForm();
+                } catch (error) {
+                    showStatus('فشل في الحذف: ' + error.message, 'error');
+                }
+            }
+        }
+
+        function refreshStudentsList() {
+            const tbody = document.getElementById('studentsList');
+            tbody.innerHTML = '';
+            
+            studentsData.sort((a, b) => a.id - b.id).forEach(student => {
+                const total = Object.values(student.grades).reduce((sum, grade) => sum + grade, 0);
+                const subjectCount = Object.keys(student.grades).length;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${subjectCount}</td>
+                    <td>${total}</td>
+                    <td>
+                        <button onclick="editStudent(${student.id})" class="action-btn edit-btn">تعديل</button>
+                        <button onclick="deleteStudentById(${student.id})" class="action-btn delete-btn">حذف</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editStudent(id) {
+            const student = studentsData.find(s => s.id === id);
+            if (student) {
+                showAddForm(student);
+            }
+        }
+
+        async function deleteStudentById(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الطالب؟')) {
+                try {
+                    studentsData = studentsData.filter(s => s.id !== id);
+                    await saveStudentToSheets();
+                    showStatus('تم حذف الطالب بنجاح', 'success');
+                    refreshStudentsList();
+                } catch (error) {
+                    showStatus('فشل في الحذف: ' + error.message, 'error');
+                }
+            }
+        }
+
+        function exportBackup() {
+            const dataStr = JSON.stringify(studentsData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'students_backup.json';
+            link.click();
+            
+            showStatus('تم إنشاء نسخة احتياطية', 'success');
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+        }
+
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.className = `status-message ${type}`;
+            statusElement.style.display = 'block';
+            
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

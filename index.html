@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام نتائج الطلاب - مركز انطلق</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #3498db, #9b59b6);
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .search-section {
+            margin-bottom: 30px;
+            text-align: center;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-section input {
+            padding: 15px 20px;
+            width: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-section input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+        
+        .search-section button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        
+        .search-section button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .result-section {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            border-right: 5px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .student-info {
+            margin-bottom: 25px;
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .student-info h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .student-id {
+            font-size: 18px;
+            color: #555;
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .grades-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .grades-table th, .grades-table td {
+            padding: 15px 20px;
+            text-align: right;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .grades-table th {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .grades-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .grades-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .total-grade {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+            padding: 15px;
+            background: #ffeaea;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            color: #3498db;
+            font-size: 18px;
+        }
+        
+        .instructions {
+            background: #e8f4fc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-right: 4px solid #3498db;
+        }
+        
+        .instructions h3 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-right: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .contact-info {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #555;
+        }
+        
+        .admin-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .admin-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .grades-table th, .grades-table td {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo.png" alt="", width="200" height="200",border-radius="100px">
+            <h1> انطلق للفيزياء</h1>
+            <p>نظام استعلام نتائج الطلاب</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>كيفية الاستعلام عن النتيجة:</h3>
+            <ol>
+                <li>أدخل رقمك المسلسل في الحقل أدناه</li>
+                <li>انقر على زر "عرض النتيجة"</li>
+                <li>ستظهر نتيجتك مع الدرجات  </li>
+            </ol>
+        </div>
+        
+        <div class="search-section">
+            <input type="number" id="studentId" placeholder="أدخل رقمك المسلسل (مثال: 1001)">
+            <button onclick="searchStudent()">عرض النتيجة</button>
+            <div class="error-message" id="errorMessage">رقم الطالب غير موجود. يرجى التحقق من الرقم وإعادة المحاولة.</div>
+        </div>
+        
+        <div class="loading" id="loadingMessage" style="display: none;">جاري البحث في قاعدة البيانات...</div>
+        
+        <div class="result-section" id="resultSection">
+            <div class="student-info">
+                <h2 id="studentName">اسم الطالب</h2>
+                <div class="student-id">رقم الطالب: <span id="displayStudentId"></span></div>
+            </div>
+            
+            <table class="grades-table">
+                <thead>
+                    <tr>
+                        <th>المادة</th>
+                        <th>الدرجة</th>
+                    </tr>
+                </thead>
+                <tbody id="gradesTableBody">
+                    <!-- سيتم تعبئة الجدول بالبيانات من خلال الجافاسكريبت -->
+                </tbody>
+            </table>
+            
+            <div class="total-grade">المجموع: <span id="totalGrade"></span></div>
+        </div>
+        
+        <div class="contact-info">
+            <p>للاستفسارات: يرجى التواصل مع إدارة المركز</p>
+            <p>📞 هاتف: 01552445853 | ✉️ email@example.com</p>
+        </div>
+        
+        <div class="admin-link">
+            <a href="admin.html" onclick="return confirm('هذه المنطقة للمشرفين فقط. هل تريد المتابعة؟')">🔐 الدخول لوحة التحكم (للمشرفين فقط)</a>
+        </div>
+    </div>
+
+    <script>
+        // رابط API لـ Google Apps Script
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwpoYoA_l6jPlu83CcsWryet4Bp5p_0HgXpahsbi2kBUikHdKU64YE2HCa25fTjbsAX/exec';
+
+        // دالة البحث عن الطالب مباشرة من Google Sheets
+        async function searchStudent() {
+            const studentId = parseInt(document.getElementById('studentId').value);
+            const errorMessage = document.getElementById('errorMessage');
+            const resultSection = document.getElementById('resultSection');
+            const loadingMessage = document.getElementById('loadingMessage');
+            
+            // إخفاء الرسائل السابقة
+            errorMessage.style.display = 'none';
+            resultSection.style.display = 'none';
+            loadingMessage.style.display = 'none';
+            
+            if (!studentId) {
+                errorMessage.textContent = "يرجى إدخال رقم الطالب";
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            try {
+                loadingMessage.style.display = 'block';
+                
+                // جلب البيانات من Google Sheets
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error('فشل في الاتصال بقاعدة البيانات');
+                }
+                
+                const data = await response.json();
+                
+                // البحث عن الطالب في البيانات
+                let student = null;
+                
+                if (data.students && Array.isArray(data.students)) {
+                    // إذا كانت البيانات تحتوي على مصفوفة students
+                    student = data.students.find(s => s.id === studentId);
+                } else if (Array.isArray(data)) {
+                    // إذا كانت البيانات مصفوفة مباشرة
+                    student = data.find(s => s.id === studentId);
+                }
+                
+                loadingMessage.style.display = 'none';
+                
+                if (student) {
+                    displayStudentResult(student);
+                } else {
+                    errorMessage.style.display = 'block';
+                    errorMessage.textContent = 'رقم الطالب غير موجود. يرجى التحقق من الرقم وإعادة المحاولة.';
+                }
+                
+            } catch (error) {
+                loadingMessage.style.display = 'none';
+                errorMessage.textContent = 'فشل في تحميل البيانات: ' + error.message;
+                errorMessage.style.display = 'block';
+                console.error('Error:', error);
+            }
+        }
+
+        // دالة عرض نتيجة الطالب
+        function displayStudentResult(student) {
+            document.getElementById('studentName').textContent = student.name;
+            document.getElementById('displayStudentId').textContent = student.id;
+            
+            // تعبئة جدول الدرجات
+            const gradesTableBody = document.getElementById('gradesTableBody');
+            gradesTableBody.innerHTML = '';
+            
+            let total = 0;
+            let subjectCount = 0;
+            
+            // معالجة الدرجات (بشكل مرن)
+            if (student.grades && typeof student.grades === 'object') {
+                // إذا كانت الدرجات ككائن
+                for (const [subject, grade] of Object.entries(student.grades)) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${subject}</td>
+                        <td>${grade}</td>
+                    `;
+                    gradesTableBody.appendChild(row);
+                    total += parseInt(grade) || 0;
+                    subjectCount++;
+                }
+            } else if (student.material && student.grade) {
+                // إذا كانت البيانات تحتوي على material و grade مباشرة
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.material || 'فيزياء'}</td>
+                    <td>${student.grade}</td>
+                `;
+                gradesTableBody.appendChild(row);
+                total = parseInt(student.grade) || 0;
+                subjectCount = 1;
+            }
+            
+            // حساب النسبة المئوية
+            const percentage = subjectCount > 0 ? ((total / (subjectCount * 100)) * 100).toFixed(1) : 0;
+            
+            // عرض المجموع
+            document.getElementById('totalGrade').textContent = 
+                `${total} من ${subjectCount * 100} | النسبة: ${percentage}%`;
+            
+            // عرض قسم النتائج
+            document.getElementById('resultSection').style.display = 'block';
+            
+            // إظهار رسالة نجاح
+            showStatus('تم العثور على نتيجة الطالب', 'success');
+        }
+
+        // دالة لعرض رسائل الحالة
+        function showStatus(message, type) {
+            // إنشاء عنصر رسالة مؤقت
+            const statusElement = document.createElement('div');
+            statusElement.textContent = message;
+            statusElement.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                animation: fadeInOut 3s ease;
+                background: ${type === 'success' ? '#2ecc71' : '#e74c3c'};
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            `;
+            
+            // إضافة أنيميشن للرسالة
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInOut {
+                    0% { opacity: 0; transform: translateY(-20px); }
+                    10% { opacity: 1; transform: translateY(0); }
+                    90% { opacity: 1; transform: translateY(0); }
+                    100% { opacity: 0; transform: translateY(-20px); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(statusElement);
+            
+            // إزالة الرسالة بعد 3 ثواني
+            setTimeout(() => {
+                if (statusElement.parentNode) {
+                    document.body.removeChild(statusElement);
+                }
+                if (style.parentNode) {
+                    document.head.removeChild(style);
+                }
+            }, 3000);
+        }
+
+        // السماح بالبحث عند الضغط على زر Enter
+        document.getElementById('studentId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchStudent();
+            }
+        });
+
+        // رسالة ترحيب عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('مرحباً بك في نظام نتائج مركز انطلق', 'success');
+        });
+    </script>
+</body>
+</html>
