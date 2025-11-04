@@ -250,24 +250,23 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="logo.png" alt="", width="200" height="200",border-radius="100px">
-            <h1> انطلق للفيزياء</h1>
+            <h1>مركز انطلق للفيزياء</h1>
             <p>نظام استعلام نتائج الطلاب</p>
         </div>
         
         <div class="instructions">
             <h3>كيفية الاستعلام عن النتيجة:</h3>
             <ol>
-                <li>أدخل رقمك المسلسل في الحقل أدناه</li>
+                <li>أدخل كود الطالب في الحقل أدناه</li>
                 <li>انقر على زر "عرض النتيجة"</li>
-                <li>ستظهر نتيجتك مع الدرجات  </li>
+                <li>ستظهر نتيجتك مع الدرجات</li>
             </ol>
         </div>
         
         <div class="search-section">
             <input type="number" id="studentId" placeholder="أدخل رقمك المسلسل (مثال: 1001)">
             <button onclick="searchStudent()">عرض النتيجة</button>
-            <div class="error-message" id="errorMessage">رقم الطالب غير موجود. يرجى التحقق من الرقم وإعادة المحاولة.</div>
+            <div class="error-message" id="errorMessage">كود الطالب غير موجود. يرجى التحقق من الرقم وإعادة المحاولة.</div>
         </div>
         
         <div class="loading" id="loadingMessage" style="display: none;">جاري البحث في قاعدة البيانات...</div>
@@ -275,7 +274,7 @@
         <div class="result-section" id="resultSection">
             <div class="student-info">
                 <h2 id="studentName">اسم الطالب</h2>
-                <div class="student-id">رقم الطالب: <span id="displayStudentId"></span></div>
+                <div class="student-id">كود الطالب: <span id="displayStudentId"></span></div>
             </div>
             
             <table class="grades-table">
@@ -299,13 +298,32 @@
         </div>
         
         <div class="admin-link">
-            <a href="admin.html" onclick="return confirm('هذه المنطقة للمشرفين فقط. هل تريد المتابعة؟')">🔐 الدخول لوحة التحكم (للمشرفين فقط)</a>
+            <a href="#" onclick="showAdminLogin()">🔐 الدخول لوحة التحكم (للمشرفين فقط)</a>
         </div>
     </div>
 
     <script>
         // رابط API لـ Google Apps Script
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwpoYoA_l6jPlu83CcsWryet4Bp5p_0HgXpahsbi2kBUikHdKU64YE2HCa25fTjbsAX/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyXOo8JWJ8dzfbwollNWDcwSBwCq_7t00TAd4c-oWumtpgsxQnrTX36Is30V3I4iIuz/exec';
+
+        // كلمة المرور البسيطة
+        const ADMIN_PASSWORD = "123456";
+
+        // دالة عرض نافذة كلمة المرور
+        function showAdminLogin() {
+            const password = prompt("🔐 أدخل كلمة مرور المشرفين:");
+            
+            if (password === null) {
+                return; // المستخدم ضغط إلغاء
+            }
+            
+            if (password === ADMIN_PASSWORD) {
+                // فتح لوحة التحكم
+                window.open('admin.html', '_blank');
+            } else {
+                alert("❌ كلمة المرور غير صحيحة");
+            }
+        }
 
         // دالة البحث عن الطالب مباشرة من Google Sheets
         async function searchStudent() {
@@ -382,32 +400,40 @@
                 // إذا كانت الدرجات ككائن
                 for (const [subject, grade] of Object.entries(student.grades)) {
                     const row = document.createElement('tr');
+                    
+                    // تحويل الدرجة من 100 إلى 20
+                    const convertedGrade = (parseFloat(grade) / 100 * 20).toFixed(1);
+                    
                     row.innerHTML = `
                         <td>${subject}</td>
-                        <td>${grade}</td>
+                        <td>${convertedGrade} / 20</td>
                     `;
                     gradesTableBody.appendChild(row);
-                    total += parseInt(grade) || 0;
+                    total += parseFloat(convertedGrade);
                     subjectCount++;
                 }
             } else if (student.material && student.grade) {
                 // إذا كانت البيانات تحتوي على material و grade مباشرة
                 const row = document.createElement('tr');
+                
+                // تحويل الدرجة من 100 إلى 20
+                const convertedGrade = (parseFloat(student.grade) / 100 * 20).toFixed(1);
+                
                 row.innerHTML = `
                     <td>${student.material || 'فيزياء'}</td>
-                    <td>${student.grade}</td>
+                    <td>${convertedGrade} / 20</td>
                 `;
                 gradesTableBody.appendChild(row);
-                total = parseInt(student.grade) || 0;
+                total = parseFloat(convertedGrade);
                 subjectCount = 1;
             }
             
-            // حساب النسبة المئوية
-            const percentage = subjectCount > 0 ? ((total / (subjectCount * 100)) * 100).toFixed(1) : 0;
+            // حساب النسبة المئوية (من 20)
+            const percentage = subjectCount > 0 ? ((total / (subjectCount * 20)) * 100).toFixed(1) : 0;
             
             // عرض المجموع
             document.getElementById('totalGrade').textContent = 
-                `${total} من ${subjectCount * 100} | النسبة: ${percentage}%`;
+                `${total.toFixed(1)} من ${subjectCount * 20} | النسبة: ${percentage}%`;
             
             // عرض قسم النتائج
             document.getElementById('resultSection').style.display = 'block';
